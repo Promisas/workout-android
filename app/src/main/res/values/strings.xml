@@ -1,3 +1,21 @@
 <resources>
     <string name="app_name">Workout</string>
+
+
+    <string name="title">Workout</string>
+    <string name="sub_title">My Exercises for today</string>
+    <string name="email">Email</string>
+    <string name="password">Password</string>
+    <string name="remember_me">Remember Me</string>
+    <string name="login">Login</string>
+    <string name="forgot_password">Forgot Your Password?</string>
+    <string name="privacy_policy">Privacy Policy</string>
+    <string name="create_account">No account yet? Create one</string>
+
+    <string name="name">Name</string>
+    <string name="confirm_password">Confirm Password</string>
+    <string name="cb_terms">I accept terms &amp; conditions</string>
+    <string name="signup">Sign Up</string>
+    <string name="terms">Terms &amp; Conditions</string>
+
 </resources>
