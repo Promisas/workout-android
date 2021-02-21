@@ -18,4 +18,9 @@
     <string name="signup">Sign Up</string>
     <string name="terms">Terms &amp; Conditions</string>
 
+    <string name="ID">ID:</string>
+    <string name="Name">Name:</string>
+    <string name="Email">Email:</string>
+    <string name="Date">Date created:</string>
+
 </resources>

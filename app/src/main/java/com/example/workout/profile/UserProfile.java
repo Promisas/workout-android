@@ -1,14 +1,11 @@
-package com.example.workout;
+package com.example.workout.profile;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-
 import android.app.Activity;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.View;
-import android.widget.Button;
 import android.widget.TextView;
 
 import com.android.volley.AuthFailureError;
@@ -17,52 +14,40 @@ import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
-import com.example.workout.auth.SignUp;
-import com.example.workout.profile.UserProfile;
+import com.example.workout.R;
 import com.example.workout.volley.VolleySingleton;
-import com.rengwuxian.materialedittext.MaterialEditText;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.HashMap;
 import java.util.Map;
 
-public class MainActivity extends AppCompatActivity {
+public class UserProfile extends AppCompatActivity {
+    private String ID,NAME,EMAIL,CREATED_DATE;
     private String appURL;
-
-    private String EMAIL,PASSWORD;
-    MaterialEditText mEmail, mPassword;
-    Button mButton;
     Activity mContext = this;
-    TextView mCreateAccount;
+    TextView mId,mName,mEmail,mDate;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        appURL = "http://192.168.1.229/api/login.php";
+        setContentView(R.layout.activity_user_profile);
 
-        mEmail = findViewById(R.id.text_Email);
-        mPassword = findViewById(R.id.text_Pass);
-        mButton = findViewById(R.id.btn_login);
-        mCreateAccount = findViewById(R.id.lb_createAccount);
+        mId = findViewById(R.id.txt_id);
+        mName = findViewById(R.id.txt_name);
+        mEmail = findViewById(R.id.txt_email);
+        mDate = findViewById(R.id.txt_datecreated);
 
-        mCreateAccount.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(getApplicationContext(),SignUp.class);
-                startActivity(intent);
-            }
-        });
-        mButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                logIn();
-            }
-        });
+        Intent data = getIntent();
+        EMAIL = data.getStringExtra("email");
+        appURL = "http://192.168.1.229/api/getUserDetail.php?email="+EMAIL;
+
+        getUserDetail();
+
     }
-    private void logIn() {
-        EMAIL = mEmail.getText().toString();
-        PASSWORD = mPassword.getText().toString();
-        if (EMAIL.isEmpty()) {
+    private void getUserDetail(){
+        if (EMAIL.isEmpty()){
             AlertDialog.Builder alert = new AlertDialog.Builder(mContext);
             alert.setMessage("Email cannot be empty");
             alert.setCancelable(false);
@@ -73,49 +58,25 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
             alert.show();
-        } else if (PASSWORD.isEmpty()){
-            AlertDialog.Builder alert = new AlertDialog.Builder(mContext);
-            alert.setMessage("Password cannot be empty");
-            alert.setCancelable(false);
-            alert.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    dialog.dismiss();
-                }
-            });
-            alert.show();
 
-        }else if (PASSWORD.length() < 8){
-            AlertDialog.Builder alert = new AlertDialog.Builder(mContext);
-            alert.setMessage("Password is too short");
-            alert.setCancelable(false);
-            alert.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    dialog.dismiss();
-                }
-            });
-            alert.show();
-        } else {
-            StringRequest stringRequest = new StringRequest(Request.Method.POST, appURL, new Response.Listener<String>() {
+        }  else{
+            StringRequest stringRequest = new StringRequest(Request.Method.GET, appURL, new Response.Listener<String>() {
                 @Override
                 public void onResponse(String response) {
-                    if (response.equals("true")) {
-                        Intent intent = new Intent(mContext, UserProfile.class);
-                        intent.putExtra("email",EMAIL);
-                        startActivity(intent);
+                    try {
+                        JSONObject  jsonObject = new JSONObject(response);
+                        ID = jsonObject.getString("id");
+                        NAME = jsonObject.getString("name");
+                        EMAIL = jsonObject.getString("email");
+                        CREATED_DATE = jsonObject.getString("created_date");
 
-                    } else {
-                        AlertDialog.Builder alert = new AlertDialog.Builder(mContext);
-                        alert.setMessage(response);
-                        alert.setCancelable(false);
-                        alert.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                dialog.dismiss();
-                            }
-                        });
-                        alert.show();
+                        mId.setText(ID);
+                        mName.setText(NAME);
+                        mEmail.setText(EMAIL);
+                        mDate.setText(CREATED_DATE);
+
+                    } catch (JSONException e) {
+                        e.printStackTrace();
                     }
 
                 }
@@ -124,8 +85,8 @@ public class MainActivity extends AppCompatActivity {
                 public void onErrorResponse(VolleyError error) {
                     AlertDialog.Builder alert;
                     NetworkResponse response = error.networkResponse;
-                    if (response != null && response.data != null) {
-                        switch (response.statusCode) {
+                    if (response != null && response.data != null){
+                        switch (response.statusCode){
 
                             case 400:
                                 alert = new AlertDialog.Builder(mContext);
@@ -143,7 +104,7 @@ public class MainActivity extends AppCompatActivity {
                             case 404:
                                 alert = new AlertDialog.Builder(mContext);
                                 alert.setTitle("Error");
-                                alert.setMessage("The server has not found anything matching the Request-URL");
+                                alert.setMessage("The server has not found anything matching the Request-URI");
                                 alert.setCancelable(false);
                                 alert.setPositiveButton("OK", new DialogInterface.OnClickListener() {
                                     @Override
@@ -187,23 +148,14 @@ public class MainActivity extends AppCompatActivity {
             }){
                 @Override
                 public Map<String, String> getHeaders() throws AuthFailureError {
-                    HashMap<String, String> params = new HashMap<>();
+                    HashMap<String,String> params = new HashMap<>();
                     params.put("Accept","Application/json; charset=UTF-8");
-                    return params;
-                }
 
-                @Override
-                protected Map<String, String> getParams() throws AuthFailureError {
-                    HashMap<String , String> params = new HashMap<>();
-                    params.put("email",EMAIL);
-                    params.put("password",PASSWORD);
                     return params;
                 }
             };
             VolleySingleton.getInstance().addRequestQueue(stringRequest);
         }
-
-
 
     }
 }
